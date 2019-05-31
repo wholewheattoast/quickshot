@@ -39,9 +39,9 @@ def popcorn(filetype="png"):
     import pytz
 
     time_of_shot = datetime.datetime.now(pytz.utc)
-    formated_time = time_of_shot.strftime("quickshot_%Y-%m-%dT%H_%M_%S.png")
+    formated_time = time_of_shot.strftime("quickshot_%Y-%m-%dT%H_%M_%S")
 
-    return formated_time
+    return "{}.{}".format(formated_time, filetype)
 
 
 def take_screenshot(page):
@@ -127,6 +127,42 @@ def diff_two_images(page, to_compare_with):
             # Some unrecoverable error occurred.
             # need a better error here?
             print("----- Some error occurred: ({})".format(e.output))
+
+    # attempt to create a flicker gif
+    appended_results = create_flicker_gif(visdiff_results)
+
+    return appended_results
+
+
+def create_flicker_gif(visdiff_results):
+    """ Test if difference between two screenshots, and if so make "flicker" gif
+
+        'flicker' refers to an animated gif switching between two results.
+    """
+
+    flicker_img_path = "{}/{}".format(
+        visdiff_results["path"],
+        popcorn(filetype="gif")
+    )
+
+    if float(visdiff_results["visdiff_difference"]) > 0:
+        flicker_string = "convert -delay 100 {path}/{shot1} {path}/{shot2} -loop 0 {flicker}".format(
+            shot1=visdiff_results["page"],
+            shot2=visdiff_results["base_target"],
+            path=visdiff_results["path"],
+            flicker=flicker_img_path,
+        )
+
+        subprocess.call(flicker_string, shell=True)
+        print("----- creating flicker gif at {}".format(flicker_img_path))
+        visdiff_results['flicker'] = flicker_img_path
+    else:
+        log.warning(
+            "....... No difference between {shot1} and {shot2}".format(
+                shot1=visdiff_results["page"],
+                shot2=visdiff_results["base_target"]
+            )
+        )
 
     return visdiff_results
 
