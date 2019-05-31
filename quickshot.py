@@ -1,29 +1,23 @@
 import argparse
-import logging
 import os
-from selenium import webdriver
 import subprocess
 
 # TODO should I rename 'to_compare_with' to 'base_target'
-
 
 parser = argparse.ArgumentParser(description='get some stuff')
 parser.add_argument('--page', type=str,
                     help='URL for page you want to compare with.')
 parser.add_argument('--to_compare_with', type=str,
                     help='URL for page you want to compare against.')
-# add an argument for a msg?
+# TODO add an argument for a msg?
 
 args = parser.parse_args()
 
-log = logging.getLogger(__name__)
-
-# Where am I saving these files for now?
-# TODO if i'm going to put these in a local dir i should check if it exists,
-#  and create if needed
+# Directory screenshots will be saved to.
+# TODO should i setup an ini for this instead?
 SCREENSHOT_PATH = "screenshots"
 
-# check that the screenshot path exists
+# Check that the screenshot path exists
 if not os.path.exists(SCREENSHOT_PATH):
     os.makedirs(SCREENSHOT_PATH)
     print(".......... Created  {}".format(SCREENSHOT_PATH))
@@ -46,11 +40,12 @@ def popcorn(filetype="png"):
 
 def take_screenshot(page):
     """"
-    Use webdriver to take a screenshot of the page.
+        Use webdriver to take a screenshot of the page.
 
-    Currently using Geckodriver.
-    Please note that `save_screenshot` takes full path of the file.
+        Currently using Geckodriver.
+        Please note that `save_screenshot` takes full path of the file.
     """
+    from selenium import webdriver
 
     with webdriver.Firefox() as driver:
         driver.get(page)
@@ -78,18 +73,18 @@ def diff_two_images(page, to_compare_with):
         to_compare_with: the base target you are comparing against
     """
 
-    # create a dict to store results from run to make a report from
+    # Create a dict to store results from run to make a report from
     visdiff_results = {}
 
     difference_img_file_name = popcorn()
 
-    # save the names of the page and base target
+    # Save the names of the page and base target
     visdiff_results["base_target"] = to_compare_with
     visdiff_results["diff_result"] = difference_img_file_name
     visdiff_results["page"] = page
     visdiff_results["path"] = SCREENSHOT_PATH
 
-    # build the command to pass to check_output()
+    # Build the command to pass to check_output()
     # The special "-metric" setting of 'AE' ("Absolute Error" count),
     # will report (to standard error), a count of the actual number of
     # pixels that were masked, at the current fuzz factor.
@@ -117,7 +112,7 @@ def diff_two_images(page, to_compare_with):
         )
 
     except subprocess.CalledProcessError as e:
-        log.info("....... exception output:  {}".format(e.output))
+        print("....... exception output:  {}".format(e.output))
         diff_metric_output = e.output
         try:
             visdiff_results["visdiff_difference"] = float(
@@ -126,7 +121,7 @@ def diff_two_images(page, to_compare_with):
         except ValueError:
             # Some unrecoverable error occurred.
             # need a better error here?
-            print("----- Some error occurred: ({})".format(e.output))
+            print("----- Some error occurred: ({}) ???".format(e.output))
 
     # attempt to create a flicker gif
     appended_results = create_flicker_gif(visdiff_results)
@@ -135,18 +130,23 @@ def diff_two_images(page, to_compare_with):
 
 
 def create_flicker_gif(visdiff_results):
-    """ Test if difference between two screenshots, and if so make "flicker" gif
+    """
+        Test if difference between two screenshots, if so make "flicker" gif.
 
-        'flicker' refers to an animated gif switching between two results.
+        'Flicker' refers to an animated gif switching between two results.
     """
 
+    # TODO should I pass in the things i need rather then the whole report
+    # that way this function is more atomic?
     flicker_img_path = "{}/{}".format(
         visdiff_results["path"],
         popcorn(filetype="gif")
     )
 
     if float(visdiff_results["visdiff_difference"]) > 0:
-        flicker_string = "convert -delay 100 {path}/{shot1} {path}/{shot2} -loop 0 {flicker}".format(
+        # TODO document options to convert
+        flicker_string = """
+        convert -delay 100 {path}/{shot1} {path}/{shot2} -loop 0 {flicker}""".format(
             shot1=visdiff_results["page"],
             shot2=visdiff_results["base_target"],
             path=visdiff_results["path"],
@@ -157,10 +157,9 @@ def create_flicker_gif(visdiff_results):
         print("----- creating flicker gif at {}".format(flicker_img_path))
         visdiff_results['flicker'] = flicker_img_path
     else:
-        log.warning(
-            "....... No difference between {shot1} and {shot2}".format(
-                shot1=visdiff_results["page"],
-                shot2=visdiff_results["base_target"]
+        print("....... No difference between {shot1} and {shot2}".format(
+            shot1=visdiff_results["page"],
+            shot2=visdiff_results["base_target"]
             )
         )
 
@@ -169,12 +168,10 @@ def create_flicker_gif(visdiff_results):
 
 def produce_report(visdiff_results):
     """ Take results from diff_two_images() and produce a report for review."""
-    print("----- prepare results")
-    # need to json load the visdiff_results
-    # pass into a template (mustache?)
-    # let's base the report on qatool
-    # return the file name
-    print(visdiff_results)
+    # TODO json load the visdiff_results
+    # TODO pass into a template (mustache?)
+    # TODO return the file name to command line?
+    print("----- Results: {}".format(visdiff_results))
 
 
 print("Let's do the diff between {} and {}.".format(
