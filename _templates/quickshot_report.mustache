@@ -12,15 +12,33 @@
     <!-- <link rel="shortcut icon" href="/image/favicon.ico"> -->
 
     <!-- CSS -->
-    <link href="css/screen.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="../css/screen.css" media="screen" rel="stylesheet" type="text/css" />
   </head>
 
   <body>
-      <article>
-        <img src="../{{path}}/{{page}}" alt="" title="{{page}}" />
-        <img src="../{{path}}/{{base_target}}" alt="" title="{{base_target}}" />
-        <img src="../{{path}}/{{diff_result}}" alt="" title="{{diff_result}}" />
-        <img src="../{{path}}/{{flicker}}" alt="" title="{{flicker}}" />
-      </article>
+    <article>
+      <h1>Quickshot Report from {{when}}</h1>
+      {{#msg}}
+      <p>{{msg}}</p>
+      {{/msg}}
+      <section class="wrapper">
+        <div>
+          <h2>Page</h2>
+          <img src="../{{path}}/{{page}}" alt="" title="{{page}}" />
+        </div>
+        <div>
+          <h2>Base Target</h2>
+          <img src="../{{path}}/{{base_target}}" alt="" title="{{base_target}}" />
+        </div>
+        <div>
+          <h2>Difference</h2>
+          <img src="../{{path}}/{{diff_result}}" alt="" title="{{diff_result}}" />
+        </div>
+        <div>
+          <h2>Flicker</h2>
+          <img src="../{{path}}/{{flicker}}" alt="" title="{{flicker}}" />
+        </div>
+      </section>
+    </article>
   </body>
 </html>

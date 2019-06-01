@@ -22,9 +22,11 @@ def check_if_dir_exists(dir_to_check):
     """ Check if a given directory exists, if not create it. """
     if not os.path.exists(dir_to_check):
         os.makedirs(dir_to_check)
-        print(".......... Created `{}` directory".format(dir_to_check))
+        print("----- Created `{}` directory".format(dir_to_check))
 
 
+# TODO Should make this function more robust?
+# For example, like how write_report needs the datetime in for display and html
 def popcorn(filetype="png"):
     """
         Get a datetime string and return it formatted for use as a filename.
@@ -100,9 +102,6 @@ def diff_two_images(page, to_compare_with):
         diff_result=difference_img_file_name
     )
 
-    print("----- Going to try")
-    print(imagemagick_compare_command_string)
-
     try:
         diff_metric_output = subprocess.check_output(
             imagemagick_compare_command_string,
@@ -110,20 +109,21 @@ def diff_two_images(page, to_compare_with):
             shell=True
         )
 
-        visdiff_results["visdiff_difference"] = int(
+        visdiff_results["visdiff_difference"] = float(
             diff_metric_output.decode('ascii')
         )
 
+    # > The compare program returns 2 on error, 0 if the images are similar,
+    # > or a value between 0 and 1 if they are not similar.
+    # from https://www.imagemagick.org/script/compare.php
+    # Need to catch the exception to get the diff value
     except subprocess.CalledProcessError as e:
-        print("....... exception output:  {}".format(e.output))
-        diff_metric_output = e.output
         try:
-            visdiff_results["visdiff_difference"] = float(
-                e.output.decode('ascii')
-            )
+            # e.output contains the diff value as a byte string
+            formated_difference = float(e.output.decode('ascii'))
+            visdiff_results["visdiff_difference"] = formated_difference
+            print("----- Difference: {}".format(formated_difference))
         except ValueError:
-            # Some unrecoverable error occurred.
-            # need a better error here?
             print("----- Some error occurred: ({}) ???".format(e.output))
 
     # attempt to create a flicker gif
@@ -141,9 +141,10 @@ def create_flicker_gif(visdiff_results):
 
     # TODO should I pass in the things i need rather then the whole report
     # that way this function is more atomic?
+    flicker_img_file_name = popcorn(filetype="gif")
     flicker_img_path = "{}/{}".format(
         visdiff_results["path"],
-        popcorn(filetype="gif")
+        flicker_img_file_name
     )
 
     if float(visdiff_results["visdiff_difference"]) > 0:
@@ -157,10 +158,11 @@ def create_flicker_gif(visdiff_results):
         )
 
         subprocess.call(flicker_string, shell=True)
-        print("----- creating flicker gif at {}".format(flicker_img_path))
-        visdiff_results['flicker'] = flicker_img_path
+        print("----- Creating flicker gif at {}".format(flicker_img_path))
+        visdiff_results['flicker'] = flicker_img_file_name
     else:
-        print("....... No difference between {shot1} and {shot2}".format(
+        # TODO I think this should be in diff_two_images instead?
+        print("----- No difference between {shot1} and {shot2}".format(
             shot1=visdiff_results["page"],
             shot2=visdiff_results["base_target"]
             )
@@ -192,22 +194,37 @@ def write_out_template(dictionary, path, fn, template):
 
     with open(html_path, "w") as html_file:
         html_file.write(html_results_encoded.decode('utf-8'))
-        print(".......... Wrote out  {}".format(html_path))
+        print("----- Wrote out: {}".format(html_path))
 
 
 def produce_report(visdiff_results):
     """ Take results from diff_two_images() and produce a report for review."""
-    # TODO need css for html report?
+
+    import datetime
+    import pytz
+
+    time_of_report = datetime.datetime.now(pytz.utc)
+    formated_time = time_of_report.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    report_file_name = "{}.html".format(
+        time_of_report.strftime("quickshot_%Y-%m-%dT%H_%M_%S")
+    )
+    visdiff_results["when"] = formated_time
+
     write_out_template(
         visdiff_results,
         "reports",
-        popcorn("html"),
+        report_file_name,
         "quickshot_report.mustache",
     )
     print("----- Results: {}".format(visdiff_results))
+    print("!!!!! Done")
+    print("""
+        You can view your results at "reports/{}"
+    """.format(report_file_name))
 
 
-print("Let's do the diff between {} and {}.".format(
+print("!!!!! Let's do the diff between {} and {}".format(
     args.page, args.to_compare_with)
 )
 run_visdif_on_page(args.page, args.to_compare_with)

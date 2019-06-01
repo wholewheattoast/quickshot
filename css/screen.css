@@ -1,0 +1,28 @@
+body {
+  font-family: sans-serif;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+img { width: 100%; }
+
+article {
+  margin: 2em auto;
+  width: 90%;
+}
+
+.wrapper {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat(4, 25%);
+}
+
+.wrapper div h2 {
+  font-size: 1em;
+  font-weight: normal;
+  text-align: center;
+}
+
+/* TODO add media queries for better layout on narrow view ports */
+
+/* TODO add fallbacks for grid, and width */
