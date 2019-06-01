@@ -17,10 +17,12 @@ args = parser.parse_args()
 # TODO should i setup an ini for this instead?
 SCREENSHOT_PATH = "screenshots"
 
-# Check that the screenshot path exists
-if not os.path.exists(SCREENSHOT_PATH):
-    os.makedirs(SCREENSHOT_PATH)
-    print(".......... Created  {}".format(SCREENSHOT_PATH))
+
+def check_if_dir_exists(dir_to_check):
+    """ Check if a given directory exists, if not create it. """
+    if not os.path.exists(dir_to_check):
+        os.makedirs(dir_to_check)
+        print(".......... Created `{}` directory".format(dir_to_check))
 
 
 def popcorn(filetype="png"):
@@ -50,6 +52,7 @@ def take_screenshot(page):
     with webdriver.Firefox() as driver:
         driver.get(page)
         formated_time = popcorn()
+        check_if_dir_exists(SCREENSHOT_PATH)
         driver.save_screenshot("{}/{}".format(SCREENSHOT_PATH, formated_time))
         driver.close()
         return formated_time
@@ -166,11 +169,41 @@ def create_flicker_gif(visdiff_results):
     return visdiff_results
 
 
+def write_out_template(dictionary, path, fn, template):
+    """
+    Render the dictionary using the given template.
+
+    path: the location to write file to
+    fn: filename to use
+    template: which mustache template use when rendering
+    """
+
+    import pystache
+
+    html_path = "{}/{}".format(path, fn)
+    results_template = open("_templates/{}".format(template)).read()
+    html_results = pystache.render(results_template, dictionary)
+    # need to encode to pass to write()
+    html_results_encoded = html_results.encode(
+        encoding='UTF-8', errors='strict'
+    )
+
+    check_if_dir_exists(path)
+
+    with open(html_path, "w") as html_file:
+        html_file.write(html_results_encoded.decode('utf-8'))
+        print(".......... Wrote out  {}".format(html_path))
+
+
 def produce_report(visdiff_results):
     """ Take results from diff_two_images() and produce a report for review."""
-    # TODO json load the visdiff_results
-    # TODO pass into a template (mustache?)
-    # TODO return the file name to command line?
+    # TODO need css for html report?
+    write_out_template(
+        visdiff_results,
+        "reports",
+        popcorn("html"),
+        "quickshot_report.mustache",
+    )
     print("----- Results: {}".format(visdiff_results))
 
 
