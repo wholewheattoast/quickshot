@@ -1,20 +1,31 @@
 import argparse
+import configparser
 import os
 import subprocess
 
 # TODO should I rename 'to_compare_with' to 'base_target'
 
-parser = argparse.ArgumentParser(description='get some stuff')
-parser.add_argument('--page', type=str,
+parser = argparse.ArgumentParser(description="""
+    Take screenshots of two pages and perform a visual difference on them.""")
+parser.add_argument('page', type=str,
                     help='URL for page you want to compare with.')
-parser.add_argument('--to_compare_with', type=str,
+parser.add_argument('to_compare_with', type=str,
                     help='URL for page you want to compare against.')
-# TODO add an argument for a msg?
+parser.add_argument('-i', '--ini', type=str, help='.ini file to load.')
+# TODO add an argument for a msg to display in report?
 
 args = parser.parse_args()
 
+if args.ini is not None:
+    config_parser = configparser.ConfigParser()
+    config_parser.read(args.ini)
+
+    # TODO generalize these terms? login and password?
+    EMAIL = config_parser.get("lex_machina", "email")
+    PASSWORD = config_parser.get("lex_machina", "password")
+
 # Directory screenshots will be saved to.
-# TODO should i setup an ini for this instead?
+# TODO should i add this path to the ini instead?
 SCREENSHOT_PATH = "screenshots"
 
 
@@ -53,6 +64,13 @@ def take_screenshot(page):
 
     with webdriver.Firefox() as driver:
         driver.get(page)
+        # Passing valid credentials
+        # TODO should i put all the ini stuff in a "login" function?
+        if args.ini is not None:
+            driver.find_element_by_name('email').send_keys(EMAIL)
+            driver.find_element_by_name('password').send_keys(PASSWORD)
+            driver.find_element_by_id('sign-in').click()
+
         formated_time = popcorn()
         check_if_dir_exists(SCREENSHOT_PATH)
         driver.save_screenshot("{}/{}".format(SCREENSHOT_PATH, formated_time))
@@ -63,6 +81,7 @@ def take_screenshot(page):
 def run_visdif_on_page(page, to_compare_with):
     """ Run a visdiff pass on a page against the to_compare_with."""
 
+    # TODO need better names then this and that
     this_screenshot = take_screenshot(args.page)
     that_screenshot = take_screenshot(args.to_compare_with)
     these_visdiff_results = diff_two_images(this_screenshot, that_screenshot)
@@ -126,7 +145,7 @@ def diff_two_images(page, to_compare_with):
         except ValueError:
             print("----- Some error occurred: ({}) ???".format(e.output))
 
-    # attempt to create a flicker gif
+    # Attempt to create a flicker gif
     appended_results = create_flicker_gif(visdiff_results)
 
     return appended_results
@@ -148,7 +167,7 @@ def create_flicker_gif(visdiff_results):
     )
 
     if float(visdiff_results["visdiff_difference"]) > 0:
-        # TODO document options to convert
+        # TODO document options to convert command
         flicker_string = """
         convert -delay 100 {path}/{shot1} {path}/{shot2} -loop 0 {flicker}""".format(
             shot1=visdiff_results["page"],
@@ -220,7 +239,7 @@ def produce_report(visdiff_results):
     print("----- Results: {}".format(visdiff_results))
     print("!!!!! Done")
     print("""
-        You can view your results at "reports/{}"
+        You can view your results at reports/{}
     """.format(report_file_name))
 
 
