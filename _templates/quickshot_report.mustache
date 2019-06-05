@@ -24,20 +24,30 @@
       <section class="wrapper">
         <div>
           <h2>Page</h2>
-          <img src="../{{path}}/{{page}}" alt="" title="{{page}}" />
+          <a href="../{{path}}/{{page}}" target="_blank">
+            <img src="../{{path}}/{{page}}" alt="" title="{{page}}" />
+          </a>
         </div>
         <div>
           <h2>Base Target</h2>
-          <img src="../{{path}}/{{base_target}}" alt="" title="{{base_target}}" />
+          <a href="../{{path}}/{{base_target}}" target="_blank">
+            <img src="../{{path}}/{{base_target}}" alt="" title="{{base_target}}" />
+          </a>
         </div>
         <div>
           <h2>Difference</h2>
-          <img src="../{{path}}/{{diff_result}}" alt="" title="{{diff_result}}" />
+          <a href="../{{path}}/{{diff_result}}" target="_blank">
+            <img src="../{{path}}/{{diff_result}}" alt="" title="{{diff_result}}" />
+          </a>
         </div>
+        {{#flicker}}
         <div>
           <h2>Flicker</h2>
-          <img src="../{{path}}/{{flicker}}" alt="" title="{{flicker}}" />
+          <a href="../{{path}}/{{flicker}}" target="_blank">
+            <img src="../{{path}}/{{flicker}}" alt="" title="{{flicker}}" />
+          </a>
         </div>
+        {{/flicker}}
       </section>
     </article>
   </body>
