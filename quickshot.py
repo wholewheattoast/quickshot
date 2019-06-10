@@ -12,7 +12,9 @@ parser.add_argument('page', type=str,
 parser.add_argument('to_compare_with', type=str,
                     help='URL for page you want to compare against.')
 parser.add_argument('-i', '--ini', type=str, help='.ini file to load.')
+parser.add_argument('-w', '--wait', type=int, help='Time in seconds to wait before taking a screenshot.')
 # TODO add an argument for a msg to display in report?
+# TODO add an argument for an optional wait time/condition?
 
 args = parser.parse_args()
 
@@ -25,7 +27,7 @@ if args.ini is not None:
     PASSWORD = config_parser.get("lex_machina", "password")
 
 # Directory screenshots will be saved to.
-# TODO should i add this path to the ini instead?
+# TODO should I add this path to the ini instead?
 SCREENSHOT_PATH = "screenshots"
 
 
@@ -53,6 +55,11 @@ def popcorn(filetype="png"):
     return "{}.{}".format(formated_time, filetype)
 
 
+def wait(length_of_wait):
+    import time
+    time.sleep(int(length_of_wait))
+
+
 def take_screenshot(page):
     """"
         Use webdriver to take a screenshot of the page.
@@ -70,6 +77,9 @@ def take_screenshot(page):
             driver.find_element_by_name('email').send_keys(EMAIL)
             driver.find_element_by_name('password').send_keys(PASSWORD)
             driver.find_element_by_id('sign-in').click()
+
+        if args.wait is not None:
+            wait(args.wait)
 
         formated_time = popcorn()
         check_if_dir_exists(SCREENSHOT_PATH)
