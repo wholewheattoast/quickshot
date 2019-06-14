@@ -17,14 +17,19 @@ parser.add_argument('-w', '--wait', type=int,
 
 args = parser.parse_args()
 
-# TODO I should test what happens if I pass in an ini value but no ini exists
+# TODO quickshot should bail on exception
 if args.ini is not None:
     config_parser = configparser.ConfigParser()
-    config_parser.read("quickshot.ini")
+    try:
+        config_parser.read("quickshot.ini")
 
-    EMAIL = config_parser.get(args.ini, "email")
-    PASSWORD = config_parser.get(args.ini, "password")
-
+        EMAIL = config_parser.get(args.ini, "email")
+        PASSWORD = config_parser.get(args.ini, "password")
+    except configparser.NoSectionError as e:
+        print("""
+            !!!!! No config section found.
+            Check that quickshot.ini exists and that {} is present.""".format(args.ini))
+        print("!!!!! {}".format(e))
 # The directory screenshots will be saved in.
 # TODO should I add this path to the ini instead?
 # TODO test for ini value if none then use this as a default
