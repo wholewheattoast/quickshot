@@ -3,13 +3,11 @@ import configparser
 import os
 import subprocess
 
-# TODO should I rename 'to_compare_with' to 'base_target'
-
 parser = argparse.ArgumentParser(description="""
     Take screenshots of two pages and perform a visual difference on them.""")
-parser.add_argument('page', type=str,
+parser.add_argument('page_a', type=str,
                     help='URL for page you want to compare with.')
-parser.add_argument('to_compare_with', type=str,
+parser.add_argument('page_b', type=str,
                     help='URL for page you want to compare against.')
 parser.add_argument('-i', '--ini', type=str, help="""
     Which section from the .ini file to load configurations from.""")
@@ -19,6 +17,7 @@ parser.add_argument('-w', '--wait', type=int,
 
 args = parser.parse_args()
 
+# TODO I should test what happens if I pass in an ini value but no ini exists
 if args.ini is not None:
     config_parser = configparser.ConfigParser()
     config_parser.read("quickshot.ini")
@@ -28,6 +27,7 @@ if args.ini is not None:
 
 # The directory screenshots will be saved in.
 # TODO should I add this path to the ini instead?
+# TODO test for ini value if none then use this as a default
 SCREENSHOT_PATH = "screenshots"
 
 
@@ -98,23 +98,21 @@ def take_screenshot(page):
         return formated_time
 
 
-def run_visdif_on_page(page, to_compare_with):
-    """ Run a visdiff pass on a page against the to_compare_with."""
+def run_visdif_on_page(page_a, page_b):
+    """ Run a visual difference pass of page_a against the page_b."""
 
-    # TODO need better names then this and that
-    this_screenshot = take_screenshot(args.page)
-    that_screenshot = take_screenshot(args.to_compare_with)
+    this_screenshot = take_screenshot(page_a)
+    that_screenshot = take_screenshot(page_b)
     these_visdiff_results = diff_two_images(this_screenshot, that_screenshot)
     produce_report(these_visdiff_results)
 
 
-# TODO i really need better names
-def diff_two_images(page, to_compare_with):
+def diff_two_images(page_a, page_b):
     """
-        Calculate the visual difference between a page and a base target.
+        Calculate the visual difference between one page and another.
 
-        page: the page you are testing.
-        to_compare_with: the base target you are comparing against
+        page_a: the page you are testing.
+        page_b: page to compare against.
     """
 
     # Create a dict to store results from run to make a report from
@@ -122,10 +120,10 @@ def diff_two_images(page, to_compare_with):
 
     difference_img_file_name = popcorn()
 
-    # Save the names of the page and base target
-    visdiff_results["base_target"] = to_compare_with
+    # Save the names of the pages
+    visdiff_results["page_b"] = page_b
     visdiff_results["diff_result"] = difference_img_file_name
-    visdiff_results["page"] = page
+    visdiff_results["page_a"] = page_a
     visdiff_results["path"] = SCREENSHOT_PATH
 
     # Build the command to pass to check_output()
@@ -134,9 +132,9 @@ def diff_two_images(page, to_compare_with):
     # pixels that were masked, at the current fuzz factor.
     # http://www.imagemagick.org/Usage/compare/
     imagemagick_compare_command_string = """
-    compare -metric AE {path}/{page} {path}/{to_compare_with} {path}/{diff_result}""".format(
-        page=page,
-        to_compare_with=to_compare_with,
+    compare -metric AE {path}/{shot_1} {path}/{shot_2} {path}/{diff_result}""".format(
+        shot_1=page_a,
+        shot_2=page_b,
         path=SCREENSHOT_PATH,
         diff_result=difference_img_file_name
     )
@@ -179,7 +177,7 @@ def create_flicker_gif(visdiff_results):
     """
 
     # TODO should I pass in the things i need rather then the whole report
-    # I would need to pass in page, base_target, and path
+    # I would need to pass in page_a, page_b, and path
     # that way this function is more atomic?
     flicker_img_file_name = popcorn(filetype="gif")
     flicker_img_path = "{}/{}".format(
@@ -190,9 +188,9 @@ def create_flicker_gif(visdiff_results):
     if float(visdiff_results["visdiff_difference"]) > 0:
         # TODO document options to convert command
         flicker_string = """
-        convert -delay 100 {path}/{shot1} {path}/{shot2} -loop 0 {flicker}""".format(
-            shot1=visdiff_results["page"],
-            shot2=visdiff_results["base_target"],
+        convert -delay 100 {path}/{shot_1} {path}/{shot_2} -loop 0 {flicker}""".format(
+            shot_1=visdiff_results["page_a"],
+            shot_2=visdiff_results["page_b"],
             path=visdiff_results["path"],
             flicker=flicker_img_path,
         )
@@ -202,9 +200,9 @@ def create_flicker_gif(visdiff_results):
         visdiff_results['flicker'] = flicker_img_file_name
     else:
         # TODO I think this should be in diff_two_images instead?
-        print("----- No difference between {shot1} and {shot2}".format(
-            shot1=visdiff_results["page"],
-            shot2=visdiff_results["base_target"]
+        print("----- No difference between {shot_1} and {shot_2}".format(
+            shot_1=visdiff_results["page_a"],
+            shot_2=visdiff_results["page_b"]
             )
         )
 
@@ -265,6 +263,7 @@ def produce_report(visdiff_results):
 
 
 print("##### Let's do the diff between {} and {}".format(
-    args.page, args.to_compare_with)
+    args.page_a, args.page_b)
 )
-run_visdif_on_page(args.page, args.to_compare_with)
+
+run_visdif_on_page(args.page_a, args.page_b)
