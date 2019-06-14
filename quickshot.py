@@ -17,23 +17,60 @@ parser.add_argument('-w', '--wait', type=int,
 
 args = parser.parse_args()
 
-# TODO quickshot should bail on exception
-if args.ini is not None:
-    config_parser = configparser.ConfigParser()
+# The directory screenshots will be saved in.
+# TODO test for ini value if none then use this as a default
+SCREENSHOT_PATH = "screenshots"
+
+
+def get_credentials(configuration):
+    """Checks for ini and for section passed in configuration."""
+
+    import sys
+
     try:
+        config_parser = configparser.ConfigParser()
         config_parser.read("quickshot.ini")
 
-        EMAIL = config_parser.get(args.ini, "email")
-        PASSWORD = config_parser.get(args.ini, "password")
+        email = config_parser.get(configuration, "email")
+        password = config_parser.get(configuration, "password")
+
+        return email, password
+
     except configparser.NoSectionError as e:
         print("""
             !!!!! No config section found.
-            Check that quickshot.ini exists and that {} is present.""".format(args.ini))
+            Check that `quickshot.ini` exists and that {} is present.""".format(args.ini))
         print("!!!!! {}".format(e))
-# The directory screenshots will be saved in.
-# TODO should I add this path to the ini instead?
-# TODO test for ini value if none then use this as a default
-SCREENSHOT_PATH = "screenshots"
+        sys.exit(1)
+
+
+def sign_in(driver, page, credentials):
+    """
+    Sign into a login form with credentials.
+
+    driver: pass in the webdriver object
+    page: page being tested
+    credentials: email and password returned from get_credentials()
+
+    """
+    from selenium.common.exceptions import (
+        NoSuchElementException,
+        WebDriverException
+    )
+
+    try:
+        driver.find_element_by_name('email').send_keys(credentials[0])
+        driver.find_element_by_name('password').send_keys(credentials[1])
+        driver.find_element_by_id('sign-in').click()
+
+    except NoSuchElementException as e:
+        print("!!!!! Woops, no element found at {}! {}".format(
+            page, e)
+        )
+        return False
+    except WebDriverException as e:
+        print("!!!!! Oh no that's an error on {}. {}".format(page, e))
+        return False
 
 
 def check_if_dir_exists(dir_to_check):
@@ -63,9 +100,11 @@ def wait(length_of_wait):
     time.sleep(int(length_of_wait))
 
 
-def take_screenshot(page):
+def take_screenshot(page, credentials=None):
     """"
         Use webdriver to take a screenshot of the page.
+
+        credentials: optional vales to sing in to a page
 
         Currently only using Geckodriver.
         Please note that `save_screenshot` takes full path of the file.
@@ -79,19 +118,9 @@ def take_screenshot(page):
     # TODO add ability to use other webdrivers
     with webdriver.Firefox() as driver:
         driver.get(page)
-        # Passing valid credentials
-        # TODO put the all the ini stuff together into a "login" function?
-        if args.ini is not None:
-            try:
-                driver.find_element_by_name('email').send_keys(EMAIL)
-                driver.find_element_by_name('password').send_keys(PASSWORD)
-                driver.find_element_by_id('sign-in').click()
-            except NoSuchElementException as e:
-                print("!!!!! Woops, no element found at {}! {}".format(
-                    page, e)
-                )
-            except WebDriverException as e:
-                print("!!!!! Oh no that's an error on {}. {}".format(page, e))
+
+        if credentials is not None:
+            sign_in(driver, page, credentials)
 
         if args.wait is not None:
             wait(args.wait)
@@ -100,14 +129,22 @@ def take_screenshot(page):
         check_if_dir_exists(SCREENSHOT_PATH)
         driver.save_screenshot("{}/{}".format(SCREENSHOT_PATH, formated_time))
         driver.close()
+
+        # TODO is there something better to return here then formated_time?
         return formated_time
 
 
 def run_visdif_on_page(page_a, page_b):
     """ Run a visual difference pass of page_a against the page_b."""
 
-    this_screenshot = take_screenshot(page_a)
-    that_screenshot = take_screenshot(page_b)
+    if args.ini is not None:
+        credentials = get_credentials(args.ini)
+    else:
+        credentials = None
+
+    this_screenshot = take_screenshot(page_a, credentials)
+    that_screenshot = take_screenshot(page_b, credentials)
+
     these_visdiff_results = diff_two_images(this_screenshot, that_screenshot)
     produce_report(these_visdiff_results)
 
