@@ -11,22 +11,22 @@ parser.add_argument('page', type=str,
                     help='URL for page you want to compare with.')
 parser.add_argument('to_compare_with', type=str,
                     help='URL for page you want to compare against.')
-parser.add_argument('-i', '--ini', type=str, help='.ini file to load.')
-parser.add_argument('-w', '--wait', type=int, help='Time in seconds to wait before taking a screenshot.')
+parser.add_argument('-i', '--ini', type=str, help="""
+    Which section from the .ini file to load configurations from.""")
+parser.add_argument('-w', '--wait', type=int,
+                    help='Time in seconds to wait before taking a screenshot.')
 # TODO add an argument for a msg to display in report?
-# TODO add an argument for an optional wait time/condition?
 
 args = parser.parse_args()
 
 if args.ini is not None:
     config_parser = configparser.ConfigParser()
-    config_parser.read(args.ini)
+    config_parser.read("quickshot.ini")
 
-    # TODO generalize these terms? login and password?
-    EMAIL = config_parser.get("lex_machina", "email")
-    PASSWORD = config_parser.get("lex_machina", "password")
+    EMAIL = config_parser.get(args.ini, "email")
+    PASSWORD = config_parser.get(args.ini, "password")
 
-# Directory screenshots will be saved to.
+# The directory screenshots will be saved in.
 # TODO should I add this path to the ini instead?
 SCREENSHOT_PATH = "screenshots"
 
@@ -38,13 +38,11 @@ def check_if_dir_exists(dir_to_check):
         print("----- Created `{}` directory".format(dir_to_check))
 
 
-# TODO Should make this function more robust?
-# For example, like how write_report needs the datetime in for display and html
+# TODO Should make this function more all purpose?
+# For example `write_report()` needs the datetime for display and for the file
 def popcorn(filetype="png"):
     """
         Get a datetime string and return it formatted for use as a filename.
-
-        Extension defaults to `.png` in returned string.
     """
     import datetime
     import pytz
@@ -64,19 +62,31 @@ def take_screenshot(page):
     """"
         Use webdriver to take a screenshot of the page.
 
-        Currently using Geckodriver.
+        Currently only using Geckodriver.
         Please note that `save_screenshot` takes full path of the file.
     """
     from selenium import webdriver
+    from selenium.common.exceptions import (
+        NoSuchElementException,
+        WebDriverException
+    )
 
+    # TODO add ability to use other webdrivers
     with webdriver.Firefox() as driver:
         driver.get(page)
         # Passing valid credentials
-        # TODO should i put all the ini stuff in a "login" function?
+        # TODO put the all the ini stuff together into a "login" function?
         if args.ini is not None:
-            driver.find_element_by_name('email').send_keys(EMAIL)
-            driver.find_element_by_name('password').send_keys(PASSWORD)
-            driver.find_element_by_id('sign-in').click()
+            try:
+                driver.find_element_by_name('email').send_keys(EMAIL)
+                driver.find_element_by_name('password').send_keys(PASSWORD)
+                driver.find_element_by_id('sign-in').click()
+            except NoSuchElementException as e:
+                print("!!!!! Woops, no element found at {}! {}".format(
+                    page, e)
+                )
+            except WebDriverException as e:
+                print("!!!!! Oh no that's an error on {}. {}".format(page, e))
 
         if args.wait is not None:
             wait(args.wait)
@@ -169,6 +179,7 @@ def create_flicker_gif(visdiff_results):
     """
 
     # TODO should I pass in the things i need rather then the whole report
+    # I would need to pass in page, base_target, and path
     # that way this function is more atomic?
     flicker_img_file_name = popcorn(filetype="gif")
     flicker_img_path = "{}/{}".format(
@@ -223,7 +234,7 @@ def write_out_template(dictionary, path, fn, template):
 
     with open(html_path, "w") as html_file:
         html_file.write(html_results_encoded.decode('utf-8'))
-        print("----- Wrote out: {}".format(html_path))
+        print("----- Wrote out {}".format(html_path))
 
 
 def produce_report(visdiff_results):
@@ -247,13 +258,13 @@ def produce_report(visdiff_results):
         "quickshot_report.mustache",
     )
     print("----- Results: {}".format(visdiff_results))
-    print("!!!!! Done")
+    print("##### Done")
     print("""
         You can view your results at reports/{}
     """.format(report_file_name))
 
 
-print("!!!!! Let's do the diff between {} and {}".format(
+print("##### Let's do the diff between {} and {}".format(
     args.page, args.to_compare_with)
 )
 run_visdif_on_page(args.page, args.to_compare_with)
