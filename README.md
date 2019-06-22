@@ -17,6 +17,10 @@ Test if you already have ImageMagick installed by running, `convert -version` in
 
 
 ## Installation
+### Via Pip
+- Run `pip install quickshot`
+
+### From source
 - Set up a virtuanenv in some fashion, `vex --python /usr/local/bin/python3 -m quickshot`
 - Install dependencies `pip3 install -r requirements.txt`
 
