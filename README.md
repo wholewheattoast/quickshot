@@ -4,8 +4,13 @@ Make a quick visualdiff between two pages.
 
 ## Requirements
 Currently Quickshot only uses the Geckodriver webdriver.
-Downloading and installing [Firefox](https://www.mozilla.org/en-US/firefox/new/) should be sufficient to get you set up.
+Downloading and installing [Firefox](https://www.mozilla.org/en-US/firefox/new/) may be sufficient to get you set up.
+
 Ensure Firefox is in your path after installing.
+
+You may also need to install Geckodriver separately.
+- On a Mac run, `brew install geckodriver`
+- For Windows or Unix binaries see the release section of the [Geckodriver project page](https://github.com/mozilla/geckodriver).
 
 You should also have ImageMagick installed.
 Test if you already have ImageMagick installed by running, `convert -version` in your terminal.
