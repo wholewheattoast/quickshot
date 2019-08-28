@@ -90,7 +90,7 @@ def popcorn(filetype="png"):
     import pytz
 
     time_of_shot = datetime.datetime.now(pytz.utc)
-    formated_time = time_of_shot.strftime("quickshot_%Y-%m-%dT%H_%M_%S")
+    formated_time = time_of_shot.strftime("quickshot_%Y-%m-%dT%H_%M_%S_%f")
 
     return "{}.{}".format(formated_time, filetype)
 
@@ -163,9 +163,9 @@ def diff_two_images(page_a, page_b):
     difference_img_file_name = popcorn()
 
     # Save the names of the pages
+    visdiff_results["page_a"] = page_a
     visdiff_results["page_b"] = page_b
     visdiff_results["diff_result"] = difference_img_file_name
-    visdiff_results["page_a"] = page_a
     visdiff_results["path"] = SCREENSHOT_PATH
 
     # Build the command to pass to check_output()
