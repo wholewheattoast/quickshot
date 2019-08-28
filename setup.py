@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='Quickshot',
-    version='0.1',
+    version='1.1',
     author="Shawn Eisenach",
     author_email="shawn@wholewheattoast.com",
     packages=setuptools.find_packages(),
