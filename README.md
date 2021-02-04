@@ -1,5 +1,5 @@
 # quickshot
-Make a quick visualdiff between two pages.
+Make a quick visualdiff between two pages or png files.
 
 
 ## Requirements
@@ -51,6 +51,7 @@ password = foobar
 Quickshot takes two required arguments being the urls of the two pages you want to compare.
 ```python quickshot.py "http://www.google.com" "http://www.google.fr"```
 
-There are also two optional arguments;
+There are also some optional arguments;
 - `-w, --wait`, length in seconds to wait after loading a page before taking a screenshot.
 - `-i, --ini`, named section to load from `quickshot.ini` configuration file.
+- `-f, --files`, flag allowing you to pass in names of `.png` files stored in `/screenshots` instead of urls.
