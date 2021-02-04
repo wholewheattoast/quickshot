@@ -13,6 +13,7 @@ parser.add_argument('-i', '--ini', type=str, help="""
     Which section from the .ini file to load configurations from.""")
 parser.add_argument('-w', '--wait', type=int,
                     help='Time in seconds to wait before taking a screenshot.')
+parser.add_argument('-f', '--files', type=str, help="""Load files rather then urls for comparison.""")
 # TODO add an argument for a msg to display in report?
 
 args = parser.parse_args()
@@ -134,6 +135,14 @@ def take_screenshot(page, credentials=None):
         return formated_time
 
 
+def run_visdiff_on_files(file_a, file_b):
+    """ Run a visual difference pass of file_a against the file_b."""
+
+    # TODO take arbitrary file paths, write a function to move them to /screenshots and return their names?
+    these_visdiff_results = diff_two_images(file_a, file_b)
+    produce_report(these_visdiff_results)
+
+
 def run_visdif_on_page(page_a, page_b):
     """ Run a visual difference pass of page_a against the page_b."""
 
@@ -162,13 +171,13 @@ def diff_two_images(page_a, page_b):
 
     difference_img_file_name = popcorn()
 
-    # Save the names of the pages
+    # Save the names of the pages for the produced report
     visdiff_results["page_a"] = page_a
     visdiff_results["page_b"] = page_b
     visdiff_results["diff_result"] = difference_img_file_name
     visdiff_results["path"] = SCREENSHOT_PATH
 
-    # Build the command to pass to check_output()
+    # Build the command to pass in to check_output()
     # The special "-metric" setting of 'AE' ("Absolute Error" count),
     # will report (to standard error), a count of the actual number of
     # pixels that were masked, at the current fuzz factor.
@@ -308,4 +317,9 @@ print("##### Let's do the diff between {} and {}".format(
     args.page_a, args.page_b)
 )
 
-run_visdif_on_page(args.page_a, args.page_b)
+
+if args.files:
+    print("files!!!")
+    run_visdiff_on_files(args.page_a, args.page_b)
+else:
+    run_visdif_on_page(args.page_a, args.page_b)
