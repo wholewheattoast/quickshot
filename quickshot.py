@@ -13,7 +13,7 @@ parser.add_argument('-i', '--ini', type=str, help="""
     Which section from the .ini file to load configurations from.""")
 parser.add_argument('-w', '--wait', type=int,
                     help='Time in seconds to wait before taking a screenshot.')
-parser.add_argument('-f', '--files', type=str, help="""Load files rather then urls for comparison.""")
+parser.add_argument('-f', '--files', action='store_true', help="""Load files rather then urls for comparison.""")
 # TODO add an argument for a msg to display in report?
 
 args = parser.parse_args()
@@ -105,7 +105,7 @@ def take_screenshot(page, credentials=None):
     """"
         Use webdriver to take a screenshot of the page.
 
-        credentials: optional vales to sing in to a page
+        credentials: optional vales to sign in to a page
 
         Currently only using Geckodriver.
         Please note that `save_screenshot` takes full path of the file.
@@ -136,15 +136,16 @@ def take_screenshot(page, credentials=None):
 
 
 def run_visdiff_on_files(file_a, file_b):
-    """ Run a visual difference pass of file_a against the file_b."""
+    """ Run a visual difference pass of `file_a` against the `file_b.`"""
 
-    # TODO take arbitrary file paths, write a function to move them to /screenshots and return their names?
+    # TODO consider taking arbitrary file paths, copy to `/screenshots` and return their names
+
     these_visdiff_results = diff_two_images(file_a, file_b)
     produce_report(these_visdiff_results)
 
 
 def run_visdif_on_page(page_a, page_b):
-    """ Run a visual difference pass of page_a against the page_b."""
+    """ Run a visual difference pass of `page_a` against the `page_b.`"""
 
     if args.ini is not None:
         credentials = get_credentials(args.ini)
@@ -162,14 +163,16 @@ def diff_two_images(page_a, page_b):
     """
         Calculate the visual difference between one page and another.
 
-        page_a: the page you are testing.
-        page_b: page to compare against.
+        page_a (str): the page you are testing.
+        page_b (str): page to compare against.
     """
 
     # Create a dict to store results from run to make a report from
     visdiff_results = {}
 
     difference_img_file_name = popcorn()
+
+    # TODO if files maybe display the names of the files in template?
 
     # Save the names of the pages for the produced report
     visdiff_results["page_a"] = page_a
@@ -264,9 +267,9 @@ def write_out_template(dictionary, path, fn, template):
     """
     Render the dictionary using the given template.
 
-    path: the location to write file to
-    fn: filename to use
-    template: which mustache template use when rendering
+    path (str): Location to write file to
+    fn (str): Filename to use
+    template (str): Mustache template use when rendering
     """
 
     import pystache
@@ -287,7 +290,7 @@ def write_out_template(dictionary, path, fn, template):
 
 
 def produce_report(visdiff_results):
-    """ Take results from diff_two_images() and produce a report for review."""
+    """ Take results from visdiff_results() and produce a report for review."""
 
     import datetime
     import pytz
@@ -319,7 +322,6 @@ print("##### Let's do the diff between {} and {}".format(
 
 
 if args.files:
-    print("files!!!")
     run_visdiff_on_files(args.page_a, args.page_b)
 else:
     run_visdif_on_page(args.page_a, args.page_b)
