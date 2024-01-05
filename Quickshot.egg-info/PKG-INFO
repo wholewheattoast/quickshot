@@ -1,19 +1,24 @@
 Metadata-Version: 2.1
 Name: Quickshot
-Version: 1.1
+Version: 1.2
 Summary: A simple tool to visdiff two web pages.
 Home-page: UNKNOWN
 Author: Shawn Eisenach
 Author-email: shawn@wholewheattoast.com
 License: UNKNOWN
 Description: # quickshot
-        Make a quick visualdiff between two pages.
+        Make a quick visualdiff between two pages or png files.
         
         
         ## Requirements
         Currently Quickshot only uses the Geckodriver webdriver.
-        Downloading and installing [Firefox](https://www.mozilla.org/en-US/firefox/new/) should be sufficient to get you set up.
+        Downloading and installing [Firefox](https://www.mozilla.org/en-US/firefox/new/) may be sufficient to get you set up.
+        
         Ensure Firefox is in your path after installing.
+        
+        You may also need to install Geckodriver separately.
+        - On a Mac run, `brew install geckodriver`
+        - For Windows or Unix binaries see the release section of the [Geckodriver project page](https://github.com/mozilla/geckodriver).
         
         You should also have ImageMagick installed.
         Test if you already have ImageMagick installed by running, `convert -version` in your terminal.
@@ -54,9 +59,10 @@ Description: # quickshot
         Quickshot takes two required arguments being the urls of the two pages you want to compare.
         ```python quickshot.py "http://www.google.com" "http://www.google.fr"```
         
-        There are also two optional arguments;
+        There are also some optional arguments;
         - `-w, --wait`, length in seconds to wait after loading a page before taking a screenshot.
         - `-i, --ini`, named section to load from `quickshot.ini` configuration file.
+        - `-f, --files`, flag allowing you to pass in names of `.png` files stored in `/screenshots` instead of urls.
         
 Platform: UNKNOWN
 Description-Content-Type: text/markdown
