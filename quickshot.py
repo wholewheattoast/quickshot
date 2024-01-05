@@ -58,11 +58,15 @@ def sign_in(driver, page, credentials):
         NoSuchElementException,
         WebDriverException
     )
+    
+    from selenium.webdriver.common.by import By
 
     try:
-        driver.find_element_by_name('email').send_keys(credentials[0])
-        driver.find_element_by_name('password').send_keys(credentials[1])
-        driver.find_element_by_id('sign-in').click()
+        driver.implicitly_wait(4)
+        driver.find_element(By.ID, 'email').send_keys(credentials[0])
+        driver.find_element(By.ID, 'next').click()
+        driver.find_element(By.ID, 'password').send_keys(credentials[1])
+        driver.find_element(By.TAG_NAME, 'button').click()
 
     except NoSuchElementException as e:
         print("!!!!! Woops, no element found at {}! {}".format(
