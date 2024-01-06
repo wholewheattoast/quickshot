@@ -20,7 +20,6 @@ article {
 .wrapper div h2 {
   font-size: 1em;
   font-weight: normal;
-  text-align: center;
 }
 
 /* TODO add media queries for better layout on narrow view ports */

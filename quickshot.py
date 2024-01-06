@@ -160,6 +160,10 @@ def run_visdif_on_page(page_a, page_b):
     that_screenshot = take_screenshot(page_b, credentials)
 
     these_visdiff_results = diff_two_images(this_screenshot, that_screenshot)
+
+    these_visdiff_results['target_a'] = page_a
+    these_visdiff_results['target_b'] = page_b
+
     produce_report(these_visdiff_results)
 
 
