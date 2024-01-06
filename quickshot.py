@@ -32,10 +32,10 @@ def get_credentials(configuration):
         config_parser = configparser.ConfigParser()
         config_parser.read("quickshot.ini")
 
-        email = config_parser.get(configuration, "email")
+        login = config_parser.get(configuration, "login")
         password = config_parser.get(configuration, "password")
 
-        return email, password
+        return login, password
 
     except configparser.NoSectionError as e:
         print("""
@@ -51,18 +51,22 @@ def sign_in(driver, page, credentials):
 
     driver: pass in the webdriver object
     page: page being tested
-    credentials: email and password returned from get_credentials()
+    credentials: login and password returned from get_credentials()
 
     """
     from selenium.common.exceptions import (
         NoSuchElementException,
         WebDriverException
     )
+    
+    from selenium.webdriver.common.by import By
 
     try:
-        driver.find_element_by_name('email').send_keys(credentials[0])
-        driver.find_element_by_name('password').send_keys(credentials[1])
-        driver.find_element_by_id('sign-in').click()
+        driver.implicitly_wait(4)
+        driver.find_element(By.ID, 'email').send_keys(credentials[0])
+        driver.find_element(By.ID, 'next').click()
+        driver.find_element(By.ID, 'password').send_keys(credentials[1])
+        driver.find_element(By.TAG_NAME, 'button').click()
 
     except NoSuchElementException as e:
         print("!!!!! Woops, no element found at {}! {}".format(
@@ -131,7 +135,7 @@ def take_screenshot(page, credentials=None):
         driver.save_screenshot("{}/{}".format(SCREENSHOT_PATH, formated_time))
         driver.close()
 
-        # TODO is there something better to return here then formated_time?
+        # TODO is there something better to return here then `formated_time`?
         return formated_time
 
 
@@ -156,6 +160,10 @@ def run_visdif_on_page(page_a, page_b):
     that_screenshot = take_screenshot(page_b, credentials)
 
     these_visdiff_results = diff_two_images(this_screenshot, that_screenshot)
+
+    these_visdiff_results['target_a'] = page_a
+    these_visdiff_results['target_b'] = page_b
+
     produce_report(these_visdiff_results)
 
 

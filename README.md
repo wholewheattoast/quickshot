@@ -35,14 +35,14 @@ You can add credentials to sign in to a web form in a file called 'quickshot.ini
 
 Since the .ini is included in the `.gitignore` file, (To help prevent you from committing your credentials to the cloud), you'll first need to create it.
 
-Each block can contain an `email` and `password` items.
+Each block can contain an `login` and `password` items.
 
 Quickshot will attempt to use `webdriver.find_element_by_name()` to locate elements on the page that correspond to these values.
 
 An example configuration block might look like;
 ```
 [example]
-email = doe@example.com
+login = doe@example.com
 password = foobar
 ```
 
