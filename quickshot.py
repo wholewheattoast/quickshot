@@ -32,10 +32,10 @@ def get_credentials(configuration):
         config_parser = configparser.ConfigParser()
         config_parser.read("quickshot.ini")
 
-        email = config_parser.get(configuration, "email")
+        login = config_parser.get(configuration, "login")
         password = config_parser.get(configuration, "password")
 
-        return email, password
+        return login, password
 
     except configparser.NoSectionError as e:
         print("""
@@ -51,7 +51,7 @@ def sign_in(driver, page, credentials):
 
     driver: pass in the webdriver object
     page: page being tested
-    credentials: email and password returned from get_credentials()
+    credentials: login and password returned from get_credentials()
 
     """
     from selenium.common.exceptions import (
@@ -135,7 +135,7 @@ def take_screenshot(page, credentials=None):
         driver.save_screenshot("{}/{}".format(SCREENSHOT_PATH, formated_time))
         driver.close()
 
-        # TODO is there something better to return here then formated_time?
+        # TODO is there something better to return here then `formated_time`?
         return formated_time
 
 
